@@ -27,8 +27,9 @@ then
   sudo chown -R postgres:postgres $DBJSON
   sudo -u postgres $DB/bin/initdb -d $DBJSON
   sudo -u postgres $DB/bin/pg_ctl start -D $DBJSON
+  echo "start import postgres data!!!"
   sleep 5
-  sudo $BENCHMARK/postgresql/import.sh $DBJSON $DB $BENCHMARK
+  sudo $BENCHMARK/postgresql_jsonb/import.sh $DBJSON $DB $BENCHMARK
   sudo -u postgres $DB/bin/pg_ctl stop -D $DBJSON
   sudo sed -i.bak -e "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" $DBJSON/postgresql.conf
   sudo bash -c "echo 'host all all 0.0.0.0/0 trust' >> $DBJSON/pg_hba.conf"
@@ -38,4 +39,3 @@ echo "Import took: $((END - START)) seconds"
 
 # for write sync/non-sync
 # edit pokec_json/postgresql.conf: fsync on/off
-

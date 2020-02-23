@@ -37,4 +37,3 @@ echo "Import took: $((END - START)) seconds"
 
 # for write sync/non-sync
 # edit pokec_json/postgresql.conf: fsync on/off
-
