@@ -19,12 +19,12 @@ Clone the test repo and uncompress the test data files.
 
     $ sudo apt-get install -y unzip default-jre binutils numactl collectd nodejs
     
-To install all databases and import the test dataset:
+To install all CAP_DBs and import the test dataset:
 
     $ ./setupAll.sh
 
 ## Run complete test setup
 
-To run the complete test against every database, we simply execute `runAll.sh`.
+To run the complete test against every CAP_DB, we simply execute `runAll.sh`.
 
     ./runAll.sh <server-ip> <num-runs>    

@@ -2,7 +2,7 @@
 
 which=$1
 FN=$2
-DBFOLDER=${3-`pwd`/databases}
+CAP_DBPATH=${3-`pwd`/CAP_DBs}
 
 sudo bash -c "
 echo never > /sys/kernel/mm/transparent_hugepage/enabled
@@ -14,7 +14,7 @@ echo 1 > /proc/sys/net/ipv4/tcp_tw_reuse
 
 ulimit -n 60000
 
-WATCHER_PID=/tmp/watcher.pid
+WATCHER_PID=/CapstoneTemp/watcher.pid
 
 # comm cputime etimes rss pcpu
 export AWKCMD='{a[$1] = $1; b[$1] = $2; c[$1] = $3; d[$1] = $4; e[$1] = $5} END {for (i in a) printf "%s; %s; %s; %0.1f; %0.1f\n", a[i], b[i], c[i], d[i], e[i]}'
@@ -38,24 +38,24 @@ killPIDFile() {
 }
 
 
-stop_ArangoDB() {
-    killPIDFile "/tmp/arangodb.pid"
+stop_ArangoCAP_DB() {
+    killPIDFile "/CapstoneTemp/arangoCAP_DB.pid"
 }
 
-start_ArangoDB_mmfiles() {
-    ADB=${DBFOLDER}/arangodb
-    cd ${ADB}
-    ${ADB}/usr/sbin/arangod \
-        ${ADB}/pokec-mmfiles \
-        --pid-file /tmp/arangodb.pid \
-        --log.file /var/tmp/arangodb.log \
+start_ArangoCAP_DB_mmfiles() {
+    ACAP_DB=${CAP_DBPATH}/arangoCAP_DB
+    cd ${ACAP_DB}
+    ${ACAP_DB}/usr/sbin/arangod \
+        ${ACAP_DB}/pokec-mmfiles \
+        --pid-file /CapstoneTemp/arangoCAP_DB.pid \
+        --log.file /var/CapstoneTemp/arangoCAP_DB.log \
         --temp.path `pwd` \
         --working-directory `pwd` \
         --daemon \
-        --configuration ${ADB}/etc/arangodb3/arangod.conf \
+        --configuration ${ACAP_DB}/etc/arangoCAP_DB3/arangod.conf \
         --server.authentication false \
-        --javascript.app-path ${ADB}/apps \
-        --javascript.startup-directory ${ADB}/usr/share/arangodb3/js \
+        --javascript.app-path ${ACAP_DB}/apps \
+        --javascript.startup-directory ${ACAP_DB}/usr/share/arangoCAP_DB3/js \
         --server.storage-engine mmfiles || (echo "failed" && exit 1)
 
     while ! curl http://127.0.0.1:8529/_api/version -fs ; do sleep 1 ; done
@@ -64,29 +64,29 @@ start_ArangoDB_mmfiles() {
 while true; do
     sleep 1
     echo -n \"`date`; \"
-    ps -p `cat /tmp/arangodb.pid` -o 'comm cputime etimes rss pcpu' --no-headers | \
+    ps -p `cat /CapstoneTemp/arangoCAP_DB.pid` -o 'comm cputime etimes rss pcpu' --no-headers | \
         awk '${AWKCMD}'
 done > $FN 2>&1" > /dev/null 2>&1 &
 
     echo "$!" > "${WATCHER_PID}"
 }
  
-start_ArangoDB() {
-    ADB=${DBFOLDER}/arangodb
-    cd ${ADB}
-    ${ADB}/usr/sbin/arangod \
-        ${ADB}/pokec-rocksdb \
-        --pid-file /tmp/arangodb.pid \
-        --log.file /var/tmp/arangodb.log \
+start_ArangoCAP_DB() {
+    ACAP_DB=${CAP_DBPATH}/arangoCAP_DB
+    cd ${ACAP_DB}
+    ${ACAP_DB}/usr/sbin/arangod \
+        ${ACAP_DB}/pokec-rocksCAP_DB \
+        --pid-file /CapstoneTemp/arangoCAP_DB.pid \
+        --log.file /var/CapstoneTemp/arangoCAP_DB.log \
         --temp.path `pwd` \
         --working-directory `pwd` \
         --daemon \
         --wal.sync-interval 1000 \
-        --configuration ${ADB}/etc/arangodb3/arangod.conf \
+        --configuration ${ACAP_DB}/etc/arangoCAP_DB3/arangod.conf \
         --server.authentication false \
-        --javascript.app-path ${ADB}/apps \
-        --javascript.startup-directory ${ADB}/usr/share/arangodb3/js \
-        --server.storage-engine rocksdb || (echo "failed" && exit 1)
+        --javascript.app-path ${ACAP_DB}/apps \
+        --javascript.startup-directory ${ACAP_DB}/usr/share/arangoCAP_DB3/js \
+        --server.storage-engine rocksCAP_DB || (echo "failed" && exit 1)
 
     while ! curl http://127.0.0.1:8529/_api/version -fs ; do sleep 1 ; done
 
@@ -94,26 +94,26 @@ start_ArangoDB() {
 while true; do
     sleep 1
     echo -n \"`date`; \"
-    ps -p `cat /tmp/arangodb.pid` -o 'comm cputime etimes rss pcpu' --no-headers | \
+    ps -p `cat /CapstoneTemp/arangoCAP_DB.pid` -o 'comm cputime etimes rss pcpu' --no-headers | \
         awk '${AWKCMD}'
 done > $FN 2>&1" > /dev/null 2>&1 &
 
     echo "$!" > "${WATCHER_PID}"
 }
 
-stop_MongoDB() {
-    killPIDFile "/var/tmp/mongodb.pid"
+stop_MongoCAP_DB() {
+    killPIDFile "/var/CapstoneTemp/mongoCAP_DB.pid"
 }
 
-start_MongoDB() {
+start_MongoCAP_DB() {
     numactl --interleave=all \
-        ${DBFOLDER}/mongodb/bin/mongod \
+        ${CAP_DBPATH}/mongoCAP_DB/bin/mongod \
         --bind_ip 0.0.0.0 \
         --fork \
-        --logpath /var/tmp/mongodb.log \
-        --pidfilepath /var/tmp/mongodb.pid \
+        --logpath /var/CapstoneTemp/mongoCAP_DB.log \
+        --pidfilepath /var/CapstoneTemp/mongoCAP_DB.pid \
         --storageEngine wiredTiger \
-        --dbpath ${DBFOLDER}/mongodb/pokec
+        --CAP_DBpath ${CAP_DBPATH}/mongoCAP_DB/pokec
 
     nohup bash -c "
 while true; do
@@ -125,33 +125,33 @@ done  > $FN 2>&1 " > /dev/null 2>&1 &
     echo "$!" > "${WATCHER_PID}"
 }
 
-stop_OrientDB() {
-    cd ${DBFOLDER}/orientdb
+stop_OrientCAP_DB() {
+    cd ${CAP_DBPATH}/orientCAP_DB
     ./bin/shutdown.sh > /dev/null 2>&1
 }
 
-start_OrientDB() {
-    cd ${DBFOLDER}/orientdb
-    ./bin/server.sh -Xmx28G -Dstorage.wal.maxSize=28000 > /var/tmp/orientdb.log 2>&1 &
+start_OrientCAP_DB() {
+    cd ${CAP_DBPATH}/orientCAP_DB
+    ./bin/server.sh -Xmx28G -Dstorage.wal.maxSize=28000 > /var/CapstoneTemp/orientCAP_DB.log 2>&1 &
     sleep 3
-    ORIENTDB_PID=`pidof java`
+    ORIENTCAP_DB_PID=`pidof java`
 
     nohup bash -c "
 while true; do
     sleep 1
     echo -n \"`date`; \"
-    ps -p $ORIENTDB_PID -o 'comm cputime etimes rss pcpu' --no-headers | \
+    ps -p $ORIENTCAP_DB_PID -o 'comm cputime etimes rss pcpu' --no-headers | \
         awk '${AWKCMD}'
 done  > $FN 2>&1 " > /dev/null 2>&1 &
     echo "$!" > "${WATCHER_PID}"
 }
 
 stop_Neo4j() {
-  ${DBFOLDER}/neo4j/bin/neo4j stop
+  ${CAP_DBPATH}/neo4j/bin/neo4j stop
 }
 
 start_Neo4j() {
-    cd ${DBFOLDER}/neo4j
+    cd ${CAP_DBPATH}/neo4j
     ./bin/neo4j start
     NEO4J_PID=`pidof java`
 
@@ -167,38 +167,38 @@ done  > $FN 2>&1 " > /dev/null 2>&1 &
     sleep 60
 }
 
-stop_Postgresql() {
-  sudo -u postgres ${DBFOLDER}/postgresql/bin/pg_ctl stop -D ${DBFOLDER}/postgresql/pokec_json
-  sudo -u postgres ${DBFOLDER}/postgresql/bin/pg_ctl stop -D ${DBFOLDER}/postgresql/pokec_tabular
+stop_XIANGMIN_PGql() {
+  sudo -u XIANGMIN_PG ${CAP_DBPATH}/XIANGMIN_PGql/bin/pg_ctl stop -D ${CAP_DBPATH}/XIANGMIN_PGql/pokec_json
+  sudo -u XIANGMIN_PG ${CAP_DBPATH}/XIANGMIN_PGql/bin/pg_ctl stop -D ${CAP_DBPATH}/XIANGMIN_PGql/pokec_tabular
   sudo service collectd stop
 }
 
-start_Postgresql_tabular() {
+start_XIANGMIN_PGql_tabular() {
     sudo service collectd start
-    sudo -u postgres ${DBFOLDER}/postgresql/bin/pg_ctl start \
-        -D ${DBFOLDER}/postgresql/pokec_tabular/ > /var/tmp/postgresql_tabular.log 2>&1 &
+    sudo -u XIANGMIN_PG ${CAP_DBPATH}/XIANGMIN_PGql/bin/pg_ctl start \
+        -D ${CAP_DBPATH}/XIANGMIN_PGql/pokec_tabular/ > /var/CapstoneTemp/XIANGMIN_PGql_tabular.log 2>&1 &
 
     nohup bash -c "
 while true; do
     sleep 1
     echo -n \"`date`; \"
-    ps -C postgres -o 'comm cputime etimes rss pcpu' --no-headers | \
+    ps -C XIANGMIN_PG -o 'comm cputime etimes rss pcpu' --no-headers | \
         awk '${AWKCMD}'
 done  > $FN 2>&1 " > /dev/null 2>&1 &
     echo "$!" > "${WATCHER_PID}"
 
 }
 
-start_Postgresql_jsonb() {
+start_XIANGMIN_PGql_jsonb() {
     sudo service collectd start
-    sudo -u postgres ${DBFOLDER}/postgresql/bin/pg_ctl start \
-        -D ${DBFOLDER}/postgresql/pokec_json/ > /var/tmp/postgresql_json.log 2>&1 &
+    sudo -u XIANGMIN_PG ${CAP_DBPATH}/XIANGMIN_PGql/bin/pg_ctl start \
+        -D ${CAP_DBPATH}/XIANGMIN_PGql/pokec_json/ > /var/CapstoneTemp/XIANGMIN_PGql_json.log 2>&1 &
 
     nohup bash -c "
 while true; do
     sleep 1
     echo -n \"`date`; \"
-    ps -C postgres -o 'comm cputime etimes rss pcpu' --no-headers | \
+    ps -C XIANGMIN_PG -o 'comm cputime etimes rss pcpu' --no-headers | \
         awk '${AWKCMD}'
 done  > $FN 2>&1 " > /dev/null 2>&1 &
     echo "$!" > "${WATCHER_PID}"
@@ -206,14 +206,14 @@ done  > $FN 2>&1 " > /dev/null 2>&1 &
 }
 
 echo "================================================================================"
-echo "* stopping databases"
+echo "* stopping CAP_DBs"
 echo "================================================================================"
 
-stop_ArangoDB
-stop_MongoDB
-stop_OrientDB
+stop_ArangoCAP_DB
+stop_MongoCAP_DB
+stop_OrientCAP_DB
 stop_Neo4j
-stop_Postgresql
+stop_XIANGMIN_PGql
 
 killPIDFile "${WATCHER_PID}"
 
@@ -222,34 +222,33 @@ echo "* starting: $which $version"
 echo "================================================================================"
 
 case "$which" in
-arangodb_mmfiles)
-    start_ArangoDB_mmfiles
+arangoCAP_DB_mmfiles)
+    start_ArangoCAP_DB_mmfiles
     ;;
-arangodb)
-    start_ArangoDB
+arangoCAP_DB)
+    start_ArangoCAP_DB
     ;;
-mongodb)
-    start_MongoDB
+mongoCAP_DB)
+    start_MongoCAP_DB
     ;;
-rethinkdb)
-    start_RethinkDB
+rethinkCAP_DB)
+    start_RethinkCAP_DB
     ;;
-orientdb)
-    start_OrientDB
+orientCAP_DB)
+    start_OrientCAP_DB
     ;;
 neo4j)
     start_Neo4j
     ;;
-postgresql_tabular)
-    start_Postgresql_tabular
+XIANGMIN_PGql_tabular)
+    start_XIANGMIN_PGql_tabular
     ;;
-postgresql_jsonb)
-    start_Postgresql_jsonb
+XIANGMIN_PGql_jsonb)
+    start_XIANGMIN_PGql_jsonb
     ;;
 *)
-    echo "unsupported database: [$which]"
-    echo "I know: ArangoDB, ArangoDB_mmfiles, MongoDB, OrientDB, Neo4j, Postgresql_tabular, Postgresql_jsonb"
+    echo "unsupported CAP_DB: [$which]"
+    echo "I know: ArangoCAP_DB, ArangoCAP_DB_mmfiles, MongoCAP_DB, OrientCAP_DB, Neo4j, XIANGMIN_PGql_tabular, XIANGMIN_PGql_jsonb"
     exit 1
     ;;
 esac
-
